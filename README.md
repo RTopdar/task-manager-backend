@@ -12,8 +12,17 @@ A node js server for the Task Manager application made using Node.js and Express
 ## Get Started
 
 After cloning the repo, run the following commands
- - npm i
- - npm run dev
+
+ ```bash
+  npm i
+```
+```bash
+  npm run dev
+```
+
+
+
+
 This will start the development server using nodemon where you can check and test the application
     
 

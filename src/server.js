@@ -6,6 +6,7 @@ import { ObjectId } from "mongodb";
 import { body, param, validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit";
 let db;
 let userEmail;
 const app = express();
@@ -25,6 +26,14 @@ connectToDb((err) => {
     db = getDb();
   }
 });
+
+const limiter = rateLimit({
+  windowMs: 15 * 1000,
+  max: 5,
+  message: "Too many requests from this IP, please try again after 15 seconds",
+});
+
+app.use(limiter);
 
 app.get("/", (req, res) => {
   res.send("Hello, World! V1.0.1");

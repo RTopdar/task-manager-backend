@@ -27,7 +27,7 @@ connectToDb((err) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello, World! V9.5");
+  res.send("Hello, World! V1.0.1");
 });
 
 const verifyToken = (req, res, next) => {
@@ -94,7 +94,7 @@ app.get(
   }
 );
 
-export {verifyToken};
+export { verifyToken };
 
 app.post(
   "/tasks",
@@ -228,7 +228,6 @@ app.delete("/tasks", [verifyToken], (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
   let taskId = req.query.id;
-  console.log(taskId);
   if (!ObjectId.isValid(taskId)) {
     return res.status(400).json({ error: "Invalid task ID" });
   }

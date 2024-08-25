@@ -27,7 +27,7 @@ connectToDb((err) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello, World! V9.3");
+  res.send("Hello, World! V9.5");
 });
 
 const verifyToken = (req, res, next) => {
@@ -241,8 +241,104 @@ app.delete(
   }
 );
 
+app.post(
+  "/tasks/mark",
+  [verifyToken, body("id").isMongoId().withMessage("Invalid task ID")],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const taskId = req.body.id;
+    db.collection("tasks")
+      .updateOne(
+        {
+          _id: ObjectId.createFromHexString(taskId),
+        },
+        {
+          $set: { DONE: true },
+        }
+      )
+      .then((result) => {
+        res.status(200).json(result);
+      })
+      .catch((err) => {
+        res.status(500).json({ error: `Failed to mark task as done | ${err}` });
+      });
+  }
+);
 
 
+
+//fetch tasks based on status and category
+app.get("/tasks/filter/", verifyToken, (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  let tasks = [];
+  let done = req.query.done;
+  const category = req.query.category;
+
+
+
+  if (done === "true") {
+    done = true;
+  } else if (done === "false") {
+    done = false;
+  }
+
+  if (done.length === 0) {
+    db.collection("tasks")
+      .find({
+        CREATED_BY: userEmail,
+        CATEGORY: category,
+      })
+      .forEach((element) => {
+        tasks.push(element);
+      })
+      .then(() => {
+        res.status(200).json(tasks);
+      })
+      .catch((err) => {
+        res.status(500).json({ error: `Failed to retrieve tasks | ${err}` });
+      });
+  }
+  if (category.length === 0) {
+    db.collection("tasks")
+      .find({
+        CREATED_BY: userEmail,
+        DONE: done,
+      })
+      .forEach((element) => {
+        tasks.push(element);
+      })
+      .then(() => {
+        res.status(200).json(tasks);
+      })
+      .catch((err) => {
+        res.status(500).json({ error: `Failed to retrieve tasks | ${err}` });
+      });
+  } else if (done.length !== 0 && category.length !== 0) {
+    db.collection("tasks")
+      .find({
+        CREATED_BY: userEmail,
+        DONE: done,
+        CATEGORY: category,
+      })
+      .forEach((element) => {
+        tasks.push(element);
+      })
+      .then(() => {
+        res.status(200).json(tasks);
+      })
+      .catch((err) => {
+        res.status(500).json({ error: `Failed to retrieve tasks | ${err}` });
+      });
+  }
+});
+
+////////////////////////////////////////Login and Register////////////////////////////////////////
 app.post(
   "/auth/register",
   [

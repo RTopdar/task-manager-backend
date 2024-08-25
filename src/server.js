@@ -94,6 +94,8 @@ app.get(
   }
 );
 
+export {verifyToken};
+
 app.post(
   "/tasks",
   [
@@ -220,26 +222,26 @@ app.patch(
   }
 );
 
-app.delete(
-  "/tasks/:id",
-  [verifyToken, param("id").isMongoId().withMessage("Invalid task ID")],
-  (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    const taskId = req.params.id;
-    getDb()
-      .collection("tasks")
-      .deleteOne({ _id: ObjectId.createFromHexString(taskId) })
-      .then((result) => {
-        res.status(200).json(result);
-      })
-      .catch((err) => {
-        res.status(500).json({ error: `Failed to delete task | ${err}` });
-      });
+app.delete("/tasks", [verifyToken], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
-);
+  let taskId = req.query.id;
+  console.log(taskId);
+  if (!ObjectId.isValid(taskId)) {
+    return res.status(400).json({ error: "Invalid task ID" });
+  }
+  getDb()
+    .collection("tasks")
+    .deleteOne({ _id: ObjectId.createFromHexString(taskId) })
+    .then((result) => {
+      res.status(200).json(result);
+    })
+    .catch((err) => {
+      res.status(500).json({ error: `Failed to delete task | ${err}` });
+    });
+});
 
 app.post(
   "/tasks/mark",
@@ -268,8 +270,6 @@ app.post(
   }
 );
 
-
-
 //fetch tasks based on status and category
 app.get("/tasks/filter/", verifyToken, (req, res) => {
   const errors = validationResult(req);
@@ -279,8 +279,6 @@ app.get("/tasks/filter/", verifyToken, (req, res) => {
   let tasks = [];
   let done = req.query.done;
   const category = req.query.category;
-
-
 
   if (done === "true") {
     done = true;
